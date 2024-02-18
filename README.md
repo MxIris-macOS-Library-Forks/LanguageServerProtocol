@@ -36,6 +36,8 @@ For the most part, this library strives to be a straightforward version of the s
 - `TokenRepresentation`: maintains the state of a document's semantic tokens
 - `DataChannel.withMessageFraming`: wraps an existing JSONRPC DataChannel up with HTTP header-based message framing 
 
+If you need to support other communication channels, you'll have to work with the `DataChannel` type from the [JSONRPC](https://github.com/ChimeHQ/JSONRPC) package. There are a few specialized ones already defined in [LanguageClient](https://github.com/ChimeHQ/LanguageClient).
+
 ## Client Support
 
 Right now, there are still some bits useful for client support in this library:
@@ -44,6 +46,28 @@ Right now, there are still some bits useful for client support in this library:
 - `Server`: a protocol that describes the essential server functionality
 
 The intention is to migrate all of these out into LanguageClient, leaving this library purely focused on protocol-level support.
+
+## Usage
+
+### Responding to Events
+
+You can respond to server events using `eventSequence`. Be careful here as some servers require responses to certain requests. It is also potentially possible that not all request types have been mapped in the `ServerRequest` type. The spec is big! If you find a problem, please open an issue!
+
+```swift
+Task {
+    for await event in server.eventSequence {
+        print("receieved event:", event)
+        
+        switch event {
+        case let .request(id: id, request: request):
+            request.relyWithError(MyError.unsupported)
+        default:
+            print("dropping notification/error")
+        }
+    }
+}
+```
+
 
 ## Supported Features
 
