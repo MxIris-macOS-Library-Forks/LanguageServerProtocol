@@ -1,13 +1,22 @@
 import JSONRPC
 
-public typealias UnusedResult = String?
-public typealias UnusedParam = String?
+public typealias UnusedResult = LSPAny?
+public typealias UnusedParam = LSPAny?
 
 public enum ProtocolError: Error {
 	case unrecognizedMethod(String)
 	case missingParams
 	case unhandledRegistrationMethod(String)
 	case missingReply
+}
+
+public enum ClientEvent: Sendable {
+	public typealias RequestResult = Result<Encodable & Sendable, AnyJSONRPCResponseError>
+	public typealias RequestHandler = @Sendable (RequestResult) async -> Void
+
+	case request(id: JSONId, request: ClientRequest)
+	case notification(ClientNotification)
+	case error(Error)
 }
 
 public enum ServerEvent: Sendable {
@@ -157,6 +166,8 @@ public enum ClientRequest: Sendable {
 		case textDocumentMoniker = "textDocument/moniker"
 		case callHierarchyIncomingCalls = "callHierarchy/incomingCalls"
 		case callHierarchyOutgoingCalls = "callHierarchy/outgoingCalls"
+		case typeHierarchySubtypes = "typeHierarchy/subtypes"
+		case typeHierarchySupertypes = "typeHierarchy/supertypes"
 		case custom
 	}
 
@@ -210,6 +221,9 @@ public enum ClientRequest: Sendable {
 		CallHierarchyIncomingCallsParams, Handler<CallHierarchyIncomingCallsResponse>)
 	case callHierarchyOutgoingCalls(
 		CallHierarchyOutgoingCallsParams, Handler<CallHierarchyOutgoingCallsResponse>)
+	case typeHierarchySubtypes(TypeHierarchySubtypesParams, Handler<TypeHierarchySubtypesResponse>)
+	case typeHierarchySupertypes(
+		TypeHierarchySupertypesParams, Handler<TypeHierarchySupertypesResponse>)
 	case custom(String, LSPAny, Handler<LSPAny>)
 
 	public var method: Method {
@@ -310,6 +324,10 @@ public enum ClientRequest: Sendable {
 			return .callHierarchyIncomingCalls
 		case .callHierarchyOutgoingCalls:
 			return .callHierarchyOutgoingCalls
+		case .typeHierarchySubtypes:
+			return .typeHierarchySubtypes
+		case .typeHierarchySupertypes:
+			return .typeHierarchySupertypes
 		case .custom:
 			return .custom
 		}
